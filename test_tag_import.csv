@@ -1,0 +1,8 @@
+Text;Tags
+"Neonatal sepsis must be evaluated with:
+
+- {{c1::Blood cultures}}
+- {{c1::Lumbar puncture}}
+- {{c1::Urine culture}} (late-onset only)";HOAD_PHARM_ABX_1
+"{{c1::Ampicillin}} and {{c2::Gentamicin}} are first-line antibiotics for neonatal sepsis";HOAD_PHARM_ABX_1
+"Group B Streptococcus (GBS) is the most common cause of {{c1::early-onset}} neonatal sepsis";HOAD_PHARM_ABX_1
