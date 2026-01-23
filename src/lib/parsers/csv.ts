@@ -85,20 +85,22 @@ export async function parseCsv(fileContent: string): Promise<ParsedCsv> {
   }
   
   // Parse the CSV with auto-detection and lenient quote handling
-  const parseOptions: Papa.ParseConfig<CsvRow> = {
-    header: customHeaders ? false : true,
-    skipEmptyLines: true,
-    transformHeader: customHeaders ? undefined : (header) => header.toLowerCase().trim().replace(/\s+/g, '_'),
-    delimiter: customHeaders ? '\t' : '', // Use tab for custom headers, auto-detect otherwise
-    quoteChar: '"',
-    escapeChar: '"',
-    newline: '', // Auto-detect
-    skipEmptyLines: 'greedy',
-  };
-  
   const result = customHeaders 
-    ? Papa.parse<string[]>(contentToParse, { ...parseOptions, header: false, delimiter: '\t' })
-    : Papa.parse<CsvRow>(contentToParse, parseOptions);
+    ? Papa.parse<string[]>(contentToParse, {
+        header: false,
+        skipEmptyLines: 'greedy',
+        delimiter: '\t',
+        quoteChar: '"',
+        escapeChar: '"',
+      })
+    : Papa.parse<CsvRow>(contentToParse, {
+        header: true,
+        skipEmptyLines: 'greedy',
+        transformHeader: (header) => header.toLowerCase().trim().replace(/\s+/g, '_'),
+        delimiter: '',
+        quoteChar: '"',
+        escapeChar: '"',
+      });
 
   // Handle custom headers case (double header format)
   if (customHeaders && Array.isArray(result.data) && result.data.length > 0 && Array.isArray(result.data[0])) {

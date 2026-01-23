@@ -113,10 +113,11 @@ export async function generateAlignmentsInBackground(
       if (matchError) {
         console.error('Text match error:', matchError);
         // If search times out or fails, skip this slide
+        const errorMessage = (matchError as any).message || 'timeout';
         await supabase.from('coverage_gaps').insert({
           lecture_id: lectureId,
           slide_concept_id: slide.id,
-          gap_description: `Search failed for: ${slide.concept_summary.slice(0, 100)}... (${matchError.message || 'timeout'})`,
+          gap_description: `Search failed for: ${slide.concept_summary.slice(0, 100)}... (${errorMessage})`,
         });
         continue;
       }

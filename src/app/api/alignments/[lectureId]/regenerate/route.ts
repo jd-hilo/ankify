@@ -73,7 +73,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       );
     }
 
-    const cardConcepts = alignmentData.card_concepts as { deck_id: string };
+    const cardConcepts = alignmentData.card_concepts as unknown as { deck_id: string };
     const deckId = cardConcepts?.deck_id;
 
     if (!deckId) {

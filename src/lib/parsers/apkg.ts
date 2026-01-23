@@ -41,7 +41,7 @@ async function getSqlJs() {
     
     sqlJsInstance = await initSqlJs({
       wasmBinary: wasmBinaryCache,
-    });
+    } as any);
   }
   return sqlJsInstance;
 }
