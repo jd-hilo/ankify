@@ -237,11 +237,11 @@ export default function UploadDeckPage() {
       <Card className="p-6 sm:p-8 shadow-neo-xl">
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <Card className="p-4 bg-red-500 border-4 border-red-700 shadow-neo-md">
+            <div className="p-4 bg-red-500 border-4 border-red-700 shadow-neo-md">
               <p className="text-sm font-black uppercase text-white">
                 {error}
               </p>
-            </Card>
+            </div>
           )}
 
           <div>

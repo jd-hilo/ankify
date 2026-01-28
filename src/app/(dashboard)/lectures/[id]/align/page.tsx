@@ -159,11 +159,11 @@ export default function AlignLecturePage() {
         ) : (
           <form onSubmit={handleAlign} className="space-y-6">
             {error && (
-              <Card className="p-4 bg-red-500 border-4 border-red-700 shadow-neo-md">
+              <div className="p-4 bg-red-500 border-4 border-red-700 shadow-neo-md">
                 <p className="text-sm font-black uppercase text-white">
                   {error}
                 </p>
-              </Card>
+              </div>
             )}
             {success && (
               <Card className="p-4 bg-green-500 border-4 border-black shadow-neo-md">
