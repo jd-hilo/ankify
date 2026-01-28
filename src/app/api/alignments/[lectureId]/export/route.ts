@@ -531,7 +531,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     const docBuffer = await Packer.toBuffer(doc);
     
     // Return as downloadable file
-    return new NextResponse(docBuffer, {
+    return new NextResponse(docBuffer as unknown as BodyInit, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename="${lectureNameSafe}_slides.docx"`,
