@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -15,6 +15,24 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
+  
+  // Check for error from auth callback
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam) {
+      // Decode and format error message
+      const decodedError = decodeURIComponent(errorParam);
+      if (decodedError === 'auth_callback_error') {
+        setError('Email confirmation failed. The link may have expired or already been used.');
+      } else if (decodedError === 'invalid_confirmation_link') {
+        setError('Invalid confirmation link. Please request a new confirmation email.');
+      } else if (decodedError === 'token_verification_failed') {
+        setError('Token verification failed. Please try signing up again.');
+      } else {
+        setError(decodedError);
+      }
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +59,7 @@ function LoginForm() {
   return (
     <form onSubmit={handleLogin} className="space-y-6">
       {error && (
-        <Card className="p-4 bg-neo-accent border-4 border-black shadow-neo-md">
+        <Card className="p-4 bg-red-500 border-4 border-red-700 shadow-neo-md">
           <p className="text-sm font-black uppercase text-white tracking-widest">
             {error}
           </p>

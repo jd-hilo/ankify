@@ -19,6 +19,7 @@ export default function AlignLecturePage() {
   const [selectedDeck, setSelectedDeck] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [aligning, setAligning] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const params = useParams();
@@ -43,12 +44,18 @@ export default function AlignLecturePage() {
 
   const handleAlign = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedDeck) return;
+    if (!selectedDeck) {
+      setError('Please select a deck');
+      return;
+    }
 
     setAligning(true);
     setError(null);
+    setSuccess(false);
 
     try {
+      console.log('Starting alignment for lecture:', lectureId, 'deck:', selectedDeck);
+      
       const response = await fetch('/api/alignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,16 +65,53 @@ export default function AlignLecturePage() {
         }),
       });
 
+      console.log('Alignment API response status:', response.status);
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to start alignment');
+        let errorMessage = 'Failed to start alignment';
+        try {
+          const data = await response.json();
+          errorMessage = data.error || errorMessage;
+          console.error('Alignment API error:', data);
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
-      // Redirect to results page which will show progress
-      router.push(`/lectures/${lectureId}/results`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      const data = await response.json();
+      console.log('Alignment started successfully:', data);
+      
+      // Show success state
+      setSuccess(true);
       setAligning(false);
+      
+      // Show success message briefly before redirect
+      // This helps on iPad where redirects can be delayed
+      setTimeout(() => {
+        console.log('Redirecting to results page...');
+        // Use window.location as fallback for iPad Safari router issues
+        try {
+          router.push(`/lectures/${lectureId}/results`);
+          // Also try window.location after a short delay if router.push doesn't work
+          setTimeout(() => {
+            if (window.location.pathname !== `/lectures/${lectureId}/results`) {
+              console.log('Router.push failed, using window.location fallback');
+              window.location.href = `/lectures/${lectureId}/results`;
+            }
+          }, 1000);
+        } catch (routerError) {
+          console.error('Router.push failed:', routerError);
+          // Fallback to window.location if router.push fails
+          window.location.href = `/lectures/${lectureId}/results`;
+        }
+      }, 1500);
+    } catch (err) {
+      console.error('Alignment error:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
+      setAligning(false);
+      setSuccess(false);
     }
   };
 
@@ -115,9 +159,16 @@ export default function AlignLecturePage() {
         ) : (
           <form onSubmit={handleAlign} className="space-y-6">
             {error && (
-              <Card className="p-4 bg-neo-accent border-4 border-black shadow-neo-md">
+              <Card className="p-4 bg-red-500 border-4 border-red-700 shadow-neo-md">
                 <p className="text-sm font-black uppercase text-white">
                   {error}
+                </p>
+              </Card>
+            )}
+            {success && (
+              <Card className="p-4 bg-green-500 border-4 border-black shadow-neo-md">
+                <p className="text-sm font-black uppercase text-white">
+                  ✓ ALIGNMENT STARTED! REDIRECTING TO RESULTS...
                 </p>
               </Card>
             )}
@@ -151,10 +202,15 @@ export default function AlignLecturePage() {
               </ol>
             </Card>
 
+            <Card className="p-4 bg-yellow-100 border-4 border-yellow-500">
+              <p className="text-sm font-black uppercase text-yellow-900">
+                ⚠️ PLEASE STAY ON THIS PAGE WHILE PROCESSING (WE ARE FIXING THIS SOON)
+              </p>
+            </Card>
+            
             <Card className="p-4 bg-neo-secondary border-4 border-black">
               <p className="text-sm font-black uppercase">
                 <strong>NOTE:</strong> ALIGNMENT MAY TAKE SEVERAL MINUTES FOR LARGE LECTURES.
-                YOU CAN LEAVE THIS PAGE AND CHECK BACK LATER.
               </p>
             </Card>
 
@@ -163,13 +219,18 @@ export default function AlignLecturePage() {
                 type="submit"
                 variant="primary"
                 size="lg"
-                disabled={!selectedDeck || aligning}
+                disabled={!selectedDeck || aligning || success}
                 className="flex-1 sm:flex-none"
               >
                 {aligning ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 stroke-[3px] animate-spin" />
                     STARTING ALIGNMENT...
+                  </>
+                ) : success ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 stroke-[3px] animate-spin" />
+                    REDIRECTING...
                   </>
                 ) : (
                   <>

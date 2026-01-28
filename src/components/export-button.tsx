@@ -14,7 +14,7 @@ export function ExportButton({ lectureId, lectureName }: ExportButtonProps) {
   const [showOptions, setShowOptions] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const handleExport = async (format: 'cid', alignmentType?: string) => {
+  const handleExport = async (format: 'cid' | 'word', alignmentType?: string) => {
     setExporting(true);
     setCopied(false);
     try {
@@ -35,6 +35,22 @@ export function ExportButton({ lectureId, lectureName }: ExportButtonProps) {
         throw new Error(errorMessage);
       }
 
+      // Handle Word export (download file)
+      if (format === 'word') {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${lectureName.replace(/[^a-zA-Z0-9]/g, '_')}_slides.docx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        setShowOptions(false);
+        return;
+      }
+
+      // Handle CID export (copy to clipboard)
       const data = await response.json();
       
       if (!data) {
@@ -110,6 +126,29 @@ export function ExportButton({ lectureId, lectureName }: ExportButtonProps) {
               >
                 COPY CID: SEARCH - ALL MATCHES
               </Button>
+            </div>
+            <div className="mt-4 pt-4 border-t-2 border-black">
+              <p className="text-xs font-black uppercase tracking-widest mb-3 px-2">WORD EXPORT</p>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleExport('word', 'directly_aligned')}
+                  className="w-full justify-start"
+                  disabled={exporting}
+                >
+                  DOWNLOAD WORD FILES - DIRECTLY ALIGNED
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleExport('word')}
+                  className="w-full justify-start"
+                  disabled={exporting}
+                >
+                  DOWNLOAD WORD FILES - ALL MATCHES
+                </Button>
+              </div>
             </div>
           </div>
         </Card>

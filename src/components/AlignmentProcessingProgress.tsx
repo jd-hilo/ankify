@@ -87,57 +87,72 @@ export function AlignmentProcessingProgress({ lectureId }: Props) {
 
   if (!job) {
     return (
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-        <h3 className="font-medium text-blue-800 dark:text-blue-200">
-          Generating Alignments
-        </h3>
-        <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-          Loading progress...
-        </p>
+      <div className="space-y-4">
+        <div className="bg-yellow-100 dark:bg-yellow-900/20 border-4 border-yellow-500 rounded-lg p-4">
+          <p className="text-sm font-black uppercase text-yellow-900 dark:text-yellow-200">
+            ⚠️ PLEASE STAY ON THIS PAGE WHILE PROCESSING (WE ARE FIXING THIS SOON)
+          </p>
+        </div>
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+          <h3 className="font-medium text-blue-800 dark:text-blue-200">
+            Generating Alignments
+          </h3>
+          <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+            Loading progress...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-      <h3 className="font-medium text-blue-800 dark:text-blue-200">
-        Generating Alignments
-      </h3>
-      <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-        {statusMessage}
-      </p>
-      
-      {/* Progress bar */}
-      <div className="mt-4">
-        <div className="flex justify-between text-sm text-blue-700 dark:text-blue-300 mb-1">
-          <span>{job.progress}%</span>
-        </div>
-        <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2.5">
-          <div
-            className="bg-blue-600 dark:bg-blue-400 h-2.5 rounded-full transition-all duration-500"
-            style={{ width: `${job.progress}%` }}
-          />
-        </div>
-      </div>
-
-      {job.error_message && (
-        <p className="mt-3 text-sm text-red-600 dark:text-red-400">
-          Error: {job.error_message}
+    <div className="space-y-4">
+      <div className="bg-yellow-100 dark:bg-yellow-900/20 border-4 border-yellow-500 rounded-lg p-4">
+        <p className="text-sm font-black uppercase text-yellow-900 dark:text-yellow-200">
+          ⚠️ PLEASE STAY ON THIS PAGE WHILE PROCESSING (WE ARE FIXING THIS SOON)
         </p>
-      )}
-
-      {/* Cancel button */}
-      {job.status === 'processing' && (
+      </div>
+      
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+        <h3 className="font-medium text-blue-800 dark:text-blue-200">
+          Generating Alignments
+        </h3>
+        <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+          {statusMessage}
+        </p>
+        
+        {/* Progress bar */}
         <div className="mt-4">
-          <button
-            onClick={handleCancel}
-            disabled={cancelling}
-            className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {cancelling ? 'Cancelling...' : 'Cancel Alignment'}
-          </button>
+          <div className="flex justify-between text-sm text-blue-700 dark:text-blue-300 mb-1">
+            <span>{job.progress}%</span>
+          </div>
+          <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2.5">
+            <div
+              className="bg-blue-600 dark:bg-blue-400 h-2.5 rounded-full transition-all duration-500"
+              style={{ width: `${job.progress}%` }}
+            />
+          </div>
         </div>
-      )}
+
+        {job.error_message && (
+          <p className="mt-3 text-sm text-red-600 dark:text-red-400">
+            Error: {job.error_message}
+          </p>
+        )}
+
+        {/* Cancel button */}
+        {job.status === 'processing' && (
+          <div className="mt-4">
+            <button
+              onClick={handleCancel}
+              disabled={cancelling}
+              className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {cancelling ? 'Cancelling...' : 'Cancel Alignment'}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
