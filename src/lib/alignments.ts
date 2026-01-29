@@ -228,6 +228,16 @@ async function processSlideAlignment(
     }
   }
 
+  // Ensure matchResult is defined before using it
+  if (!matchResult) {
+    await supabase.from('coverage_gaps').insert({
+      lecture_id: lectureId,
+      slide_concept_id: slide.id,
+      gap_description: `AI matching failed: No result returned`,
+    });
+    return;
+  }
+
   const matches = matchResult.matches;
   console.log(`Slide ${slide.slide_number}: AI found ${matches.length} relevant matches`);
 

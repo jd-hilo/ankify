@@ -6,7 +6,7 @@ import { Button, Card, Badge } from '@/components/ui';
 import { Copy, Check, ChevronDown } from 'lucide-react';
 
 interface Alignment {
-  card_concepts: { card_id: string };
+  card_concepts: { card_id: string } | null;
   alignment_type: AlignmentType;
 }
 
@@ -42,10 +42,12 @@ export function SlideExportButton({ alignments, slideNumber }: SlideExportButton
     
     if (filterType === 'directly_aligned') {
       cardIds = alignments
-        .filter(a => a.alignment_type === 'directly_aligned')
-        .map(a => a.card_concepts.card_id);
+        .filter(a => a.alignment_type === 'directly_aligned' && a.card_concepts !== null)
+        .map(a => a.card_concepts!.card_id);
     } else {
-      cardIds = alignments.map(a => a.card_concepts.card_id);
+      cardIds = alignments
+        .filter(a => a.card_concepts !== null)
+        .map(a => a.card_concepts!.card_id);
     }
 
     if (cardIds.length === 0) {
@@ -66,12 +68,15 @@ export function SlideExportButton({ alignments, slideNumber }: SlideExportButton
     }
   };
 
-  if (alignments.length === 0) {
+  // Filter out alignments without card_concepts
+  const validAlignments = alignments.filter(a => a.card_concepts !== null);
+  
+  if (validAlignments.length === 0) {
     return null;
   }
 
-  const directlyAlignedCount = alignments.filter(a => a.alignment_type === 'directly_aligned').length;
-  const allCount = alignments.length;
+  const directlyAlignedCount = validAlignments.filter(a => a.alignment_type === 'directly_aligned').length;
+  const allCount = validAlignments.length;
 
   return (
     <div className="ml-auto relative" ref={dropdownRef}>
