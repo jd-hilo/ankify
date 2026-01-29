@@ -21,7 +21,7 @@ interface AlignmentWithRelations {
   similarity_score: number;
   llm_reasoning: string;
   slide_concepts: { slide_number: number; concept_summary: string };
-  card_concepts: { card_id: string; concept_summary: string; tags: string[] | null };
+  card_concepts: { card_id: string; concept_summary: string; tags: string[] | null } | null;
 }
 
 interface GapWithRelations {
@@ -105,12 +105,14 @@ export default async function ResultsPage({ params, searchParams }: Props) {
   }
 
   // Get alignments with related data
+  // Use LEFT JOINs instead of INNER JOINs to avoid RLS issues with card_concepts
+  // If card_concepts is filtered by RLS, we still want to show the alignment
   let alignmentsQuery = supabase
     .from('card_alignments')
     .select(`
       *,
       slide_concepts!inner(slide_number, concept_summary),
-      card_concepts!inner(card_id, concept_summary, tags)
+      card_concepts(card_id, concept_summary, tags)
     `)
     .eq('lecture_id', id)
     .order('created_at', { ascending: true });
@@ -228,10 +230,18 @@ export default async function ResultsPage({ params, searchParams }: Props) {
                       <div key={alignment.id} className="px-6 py-4">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
-                            <p className="text-base font-bold leading-relaxed mb-2">{alignment.card_concepts.concept_summary}</p>
-                            <p className="text-xs font-bold uppercase tracking-widest mb-2 opacity-60">
-                              CARD ID: {alignment.card_concepts.card_id}
-                            </p>
+                            {alignment.card_concepts ? (
+                              <>
+                                <p className="text-base font-bold leading-relaxed mb-2">{alignment.card_concepts.concept_summary}</p>
+                                <p className="text-xs font-bold uppercase tracking-widest mb-2 opacity-60">
+                                  CARD ID: {alignment.card_concepts.card_id}
+                                </p>
+                              </>
+                            ) : (
+                              <p className="text-base font-bold leading-relaxed mb-2 text-red-600">
+                                Card details not available (RLS restriction - please run migration 007)
+                              </p>
+                            )}
                             <Card className="p-3 bg-neo-secondary border-4 border-black mt-3">
                               <p className="text-xs font-bold italic">
                                 {alignment.llm_reasoning}

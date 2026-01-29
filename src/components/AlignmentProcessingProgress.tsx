@@ -30,8 +30,10 @@ export function AlignmentProcessingProgress({ lectureId }: Props) {
           const data = await response.json();
           setJob(data.job);
 
-          // Update status message based on progress
-          if (data.job.progress < 20) {
+          // Update status message based on progress or status
+          if (data.job.status === 'failed') {
+            setStatusMessage('Processing failed');
+          } else if (data.job.progress < 20) {
             setStatusMessage('Finding candidate cards...');
           } else if (data.job.progress < 60) {
             setStatusMessage('Processing slides...');
@@ -113,31 +115,50 @@ export function AlignmentProcessingProgress({ lectureId }: Props) {
         </p>
       </div>
       
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-        <h3 className="font-medium text-blue-800 dark:text-blue-200">
-          Generating Alignments
+      <div className={`rounded-lg p-6 border ${
+        job.status === 'failed' 
+          ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' 
+          : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+      }`}>
+        <h3 className={`font-medium ${
+          job.status === 'failed'
+            ? 'text-red-800 dark:text-red-200'
+            : 'text-blue-800 dark:text-blue-200'
+        }`}>
+          {job.status === 'failed' ? 'Alignment Failed' : 'Generating Alignments'}
         </h3>
-        <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+        <p className={`text-sm mt-1 ${
+          job.status === 'failed'
+            ? 'text-red-700 dark:text-red-300'
+            : 'text-blue-700 dark:text-blue-300'
+        }`}>
           {statusMessage}
         </p>
         
         {/* Progress bar */}
-        <div className="mt-4">
-          <div className="flex justify-between text-sm text-blue-700 dark:text-blue-300 mb-1">
-            <span>{job.progress}%</span>
+        {job.status !== 'failed' && (
+          <div className="mt-4">
+            <div className="flex justify-between text-sm text-blue-700 dark:text-blue-300 mb-1">
+              <span>{job.progress}%</span>
+            </div>
+            <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2.5">
+              <div
+                className="bg-blue-600 dark:bg-blue-400 h-2.5 rounded-full transition-all duration-500"
+                style={{ width: `${job.progress}%` }}
+              />
+            </div>
           </div>
-          <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2.5">
-            <div
-              className="bg-blue-600 dark:bg-blue-400 h-2.5 rounded-full transition-all duration-500"
-              style={{ width: `${job.progress}%` }}
-            />
-          </div>
-        </div>
+        )}
 
         {job.error_message && (
-          <p className="mt-3 text-sm text-red-600 dark:text-red-400">
-            Error: {job.error_message}
-          </p>
+          <div className="mt-4 p-4 bg-red-100 dark:bg-red-900/30 rounded-lg border border-red-300 dark:border-red-700">
+            <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">
+              Error Details:
+            </p>
+            <p className="text-sm text-red-700 dark:text-red-300">
+              {job.error_message}
+            </p>
+          </div>
         )}
 
         {/* Cancel button */}
