@@ -103,22 +103,14 @@ export function LectureActions({ lecture, hasAlignments }: LectureActionsProps) 
               ) : (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 stroke-[3px]" />
-                  RE-ALIGN CARDS
+                  RE-MATCH CARDS
                 </>
               )}
             </Button>
           ) : (
             <Link href={`/lectures/${lecture.id}/align`}>
               <Button variant="primary">
-                ALIGN CARDS
-                <ArrowRight className="ml-2 h-4 w-4 stroke-[3px]" />
-              </Button>
-            </Link>
-          )}
-          {hasAlignments && (
-            <Link href={`/lectures/${lecture.id}/results`}>
-              <Button variant="outline">
-                VIEW RESULTS
+                MATCH CARDS
                 <ArrowRight className="ml-2 h-4 w-4 stroke-[3px]" />
               </Button>
             </Link>

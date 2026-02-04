@@ -14,7 +14,7 @@ export function RegenerateAlignmentsButton({ lectureId }: RegenerateAlignmentsBu
   const router = useRouter();
 
   const handleRegenerate = async () => {
-    if (!confirm('Are you sure you want to regenerate alignments? This will delete all existing matches and create new ones.')) {
+    if (!confirm('Are you sure you want to regenerate matches? This will delete all existing matches and create new ones.')) {
       return;
     }
 
@@ -26,13 +26,14 @@ export function RegenerateAlignmentsButton({ lectureId }: RegenerateAlignmentsBu
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to regenerate alignments');
+        throw new Error(data.error || 'Failed to regenerate matches');
       }
 
-      // Refresh the page to show processing status
+      // Redirect to lecture page to show progress
+      router.push(`/lectures/${lectureId}`);
       router.refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to regenerate alignments');
+      alert(err instanceof Error ? err.message : 'Failed to regenerate matches');
       setRegenerating(false);
     }
   };
@@ -51,7 +52,7 @@ export function RegenerateAlignmentsButton({ lectureId }: RegenerateAlignmentsBu
       ) : (
         <>
           <RefreshCw className="mr-2 h-4 w-4 stroke-[3px]" />
-          REGENERATE ALIGNMENTS
+              REGENERATE MATCHES
         </>
       )}
     </Button>

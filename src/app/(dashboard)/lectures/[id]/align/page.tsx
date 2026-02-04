@@ -93,18 +93,18 @@ export default function AlignLecturePage() {
         console.log('Redirecting to results page...');
         // Use window.location as fallback for iPad Safari router issues
         try {
-          router.push(`/lectures/${lectureId}/results`);
+          router.push(`/lectures/${lectureId}`);
           // Also try window.location after a short delay if router.push doesn't work
           setTimeout(() => {
-            if (window.location.pathname !== `/lectures/${lectureId}/results`) {
+            if (window.location.pathname !== `/lectures/${lectureId}`) {
               console.log('Router.push failed, using window.location fallback');
-              window.location.href = `/lectures/${lectureId}/results`;
+              window.location.href = `/lectures/${lectureId}`;
             }
           }, 1000);
         } catch (routerError) {
           console.error('Router.push failed:', routerError);
           // Fallback to window.location if router.push fails
-          window.location.href = `/lectures/${lectureId}/results`;
+          window.location.href = `/lectures/${lectureId}`;
         }
       }, 1500);
     } catch (err) {
@@ -138,7 +138,7 @@ export default function AlignLecturePage() {
       </Link>
 
       <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter mb-8">
-        ALIGN CARDS TO LECTURE
+        MATCH CARDS TO LECTURE
       </h1>
 
       <Card className="p-6 sm:p-8 shadow-neo-xl">
@@ -168,14 +168,14 @@ export default function AlignLecturePage() {
             {success && (
               <Card className="p-4 bg-green-500 border-4 border-black shadow-neo-md">
                 <p className="text-sm font-black uppercase text-white">
-                  ✓ ALIGNMENT STARTED! REDIRECTING TO RESULTS...
+                  ✓ MATCHING STARTED! REDIRECTING TO RESULTS...
                 </p>
               </Card>
             )}
 
             <div>
               <label className="block text-sm font-black uppercase tracking-widest mb-3">
-                SELECT DECK TO ALIGN
+                SELECT DECK TO MATCH
               </label>
               <select
                 value={selectedDeck}
@@ -196,7 +196,7 @@ export default function AlignLecturePage() {
               <h4 className="text-base font-black uppercase mb-3">WHAT HAPPENS NEXT?</h4>
               <ol className="list-decimal list-inside space-y-2 text-sm font-bold">
                 <li>Each slide concept is compared to deck cards using vector similarity</li>
-                <li>AI classifies the alignment type for top matches</li>
+                <li>AI classifies the match type for top matches</li>
                 <li>Results show which cards to study for this lecture</li>
                 <li>You can export card IDs to create a filtered deck in Anki</li>
               </ol>
@@ -210,7 +210,7 @@ export default function AlignLecturePage() {
             
             <Card className="p-4 bg-neo-secondary border-4 border-black">
               <p className="text-sm font-black uppercase">
-                <strong>NOTE:</strong> ALIGNMENT MAY TAKE SEVERAL MINUTES FOR LARGE LECTURES.
+                <strong>NOTE:</strong> MATCHING MAY TAKE SEVERAL MINUTES FOR LARGE LECTURES.
               </p>
             </Card>
 
@@ -222,22 +222,22 @@ export default function AlignLecturePage() {
                 disabled={!selectedDeck || aligning || success}
                 className="flex-1 sm:flex-none"
               >
-                {aligning ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 stroke-[3px] animate-spin" />
-                    STARTING ALIGNMENT...
-                  </>
-                ) : success ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 stroke-[3px] animate-spin" />
-                    REDIRECTING...
-                  </>
-                ) : (
-                  <>
-                    <Play className="mr-2 h-5 w-5 stroke-[3px]" />
-                    START ALIGNMENT
-                  </>
-                )}
+              {aligning ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 stroke-[3px] animate-spin" />
+                  STARTING MATCHING...
+                </>
+              ) : success ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 stroke-[3px] animate-spin" />
+                  REDIRECTING...
+                </>
+              ) : (
+                <>
+                  <Play className="mr-2 h-5 w-5 stroke-[3px]" />
+                  START MATCHING
+                </>
+              )}
               </Button>
               <Link href={`/lectures/${lectureId}`}>
                 <Button variant="outline" size="lg">

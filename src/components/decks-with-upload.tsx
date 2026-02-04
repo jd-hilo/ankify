@@ -5,12 +5,36 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DeckProcessingProgress from '@/components/DeckProcessingProgress';
 import { createClient } from '@/lib/supabase/client';
-import { Card, Button, Input } from '@/components/ui';
-import { ArrowLeft, Upload, X, Loader2 } from 'lucide-react';
+import { Card, Button, Input, Badge, Modal } from '@/components/ui';
+import { BookOpen, Calendar, Upload, X, Loader2 } from 'lucide-react';
+import type { Deck } from '@/types/database';
 
 type UploadState = 'idle' | 'uploading' | 'processing' | 'completed' | 'error';
 
-export default function UploadDeckPage() {
+function StatusBadge({ status }: { status: string }) {
+  const variants: Record<string, { variant: 'accent' | 'secondary' | 'muted' | 'outline' }> = {
+    completed: { variant: 'secondary' },
+    processing: { variant: 'muted' },
+    failed: { variant: 'accent' },
+  };
+
+  const config = variants[status] || { variant: 'outline' as const };
+
+  return (
+    <Badge variant={config.variant} size="sm">
+      {status.toUpperCase()}
+    </Badge>
+  );
+}
+
+interface DecksWithUploadProps {
+  initialDecks: Deck[];
+  error: string | null;
+}
+
+export function DecksWithUpload({ initialDecks, error: initialError }: DecksWithUploadProps) {
+  const [decks, setDecks] = useState<Deck[]>(initialDecks);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
   const [uploadState, setUploadState] = useState<UploadState>('idle');
@@ -93,7 +117,6 @@ export default function UploadDeckPage() {
       const storagePath = `${user.id}/${crypto.randomUUID()}_${file.name}`;
 
       // Step 1: Upload directly to Supabase Storage with progress tracking
-      // We'll use XMLHttpRequest to the Supabase Storage REST API for progress
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -186,22 +209,26 @@ export default function UploadDeckPage() {
     setUploadState('error');
   };
 
+  const handleCloseModal = () => {
+    if (uploadState !== 'uploading' && uploadState !== 'processing') {
+      setShowUploadModal(false);
+      setFile(null);
+      setName('');
+      setError(null);
+      setUploadState('idle');
+      setUploadProgress(0);
+    }
+  };
+
   // Show progress view when processing
   if (uploadState === 'processing' || uploadState === 'completed') {
     return (
-      <div className="max-w-2xl">
-        <Link href="/decks">
-          <Button variant="ghost" size="sm" className="mb-6">
-            <ArrowLeft className="mr-2 h-4 w-4 stroke-[3px]" />
-            BACK TO DECKS
-          </Button>
-        </Link>
-
-        <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter mb-8">
-          {uploadState === 'completed' ? 'UPLOAD COMPLETE!' : 'PROCESSING DECK...'}
-        </h1>
-
-        <Card className="p-6 sm:p-8 shadow-neo-xl">
+      <Modal
+        isOpen={true}
+        onClose={() => {}}
+        title={uploadState === 'completed' ? 'UPLOAD COMPLETE!' : 'PROCESSING DECK...'}
+      >
+        <div className="p-4">
           {deckId && (
             <DeckProcessingProgress
               deckId={deckId}
@@ -216,25 +243,100 @@ export default function UploadDeckPage() {
               AI will be used later when you align cards with a lecture.
             </p>
           </Card>
-        </Card>
-      </div>
+        </div>
+      </Modal>
     );
   }
 
   return (
-    <div className="max-w-2xl">
-      <Link href="/decks">
-        <Button variant="ghost" size="sm" className="mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4 stroke-[3px]" />
-          BACK TO DECKS
+    <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase tracking-tighter">
+          DECKS
+        </h1>
+        <Button variant="primary" size="lg" onClick={() => setShowUploadModal(true)}>
+          <Upload className="mr-2 h-5 w-5 stroke-[3px]" />
+          UPLOAD DECK
         </Button>
-      </Link>
+      </div>
 
-      <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase tracking-tighter mb-8">
-        UPLOAD DECK
-      </h1>
+      {initialError ? (
+        <Card className="p-6 bg-neo-accent border-4 border-black shadow-neo-md">
+          <p className="text-base font-black uppercase text-white">
+            FAILED TO LOAD DECKS: {initialError}
+          </p>
+        </Card>
+      ) : decks.length > 0 ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {decks.map((deck, idx) => (
+            <Link 
+              key={deck.id}
+              href={`/decks/${deck.id}`}
+              className="block"
+            >
+              <Card 
+                hover 
+                className={`p-6 ${idx % 3 === 0 ? 'rotate-1' : idx % 3 === 1 ? '-rotate-1' : 'rotate-2'}`}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="bg-neo-accent border-4 border-black p-3 shadow-neo-sm">
+                    <BookOpen className="h-6 w-6 stroke-white stroke-[3px]" />
+                  </div>
+                  <StatusBadge status={deck.processing_status} />
+                </div>
+                
+                <h3 className="text-xl font-black uppercase mb-3 hover:text-neo-accent transition-colors duration-100">
+                  {deck.name}
+                </h3>
+                
+                <div className="space-y-2 border-t-4 border-black pt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold uppercase tracking-widest">TYPE</span>
+                    <Badge variant="outline" size="sm">
+                      {deck.file_type.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold uppercase tracking-widest">CARDS</span>
+                    <span className="text-lg font-black">{deck.card_count.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold uppercase tracking-widest flex items-center gap-1">
+                      <Calendar className="h-4 w-4 stroke-[3px]" />
+                      CREATED
+                    </span>
+                    <span className="text-sm font-bold">
+                      {new Date(deck.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <Card className="p-12 sm:p-16 text-center shadow-neo-xl">
+          <div className="mb-6 inline-block">
+            <div className="bg-neo-secondary border-4 border-black p-8 shadow-neo-lg rotate-3">
+              <BookOpen className="h-16 w-16 stroke-black stroke-[4px]" />
+            </div>
+          </div>
+          <p className="text-xl font-black uppercase mb-6">
+            YOU HAVEN&apos;T UPLOADED ANY DECKS YET
+          </p>
+          <Button variant="primary" size="lg" onClick={() => setShowUploadModal(true)}>
+            <Upload className="mr-2 h-5 w-5 stroke-[3px]" />
+            UPLOAD YOUR FIRST DECK
+          </Button>
+        </Card>
+      )}
 
-      <Card className="p-6 sm:p-8 shadow-neo-xl">
+      {/* Upload Modal */}
+      <Modal
+        isOpen={showUploadModal}
+        onClose={handleCloseModal}
+        title="UPLOAD DECK"
+      >
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <div className="p-4 bg-red-500 border-4 border-red-700 shadow-neo-md">
@@ -254,7 +356,7 @@ export default function UploadDeckPage() {
               onDragOver={handleDrag}
               onDrop={handleDrop}
               className={`
-                border-4 border-dashed border-black p-8 sm:p-12 text-center transition-all duration-100
+                border-4 border-dashed border-black p-8 text-center transition-all duration-100
                 ${dragActive
                   ? 'bg-neo-secondary shadow-neo-md'
                   : file
@@ -357,7 +459,7 @@ export default function UploadDeckPage() {
               variant="primary"
               size="lg"
               disabled={!file || !name.trim() || uploadState === 'uploading'}
-              className="flex-1 sm:flex-none"
+              className="flex-1"
             >
               {uploadState === 'uploading' ? (
                 <>
@@ -371,14 +473,18 @@ export default function UploadDeckPage() {
                 </>
               )}
             </Button>
-            <Link href="/decks">
-              <Button variant="outline" size="lg">
-                CANCEL
-              </Button>
-            </Link>
+            <Button 
+              type="button"
+              variant="outline" 
+              size="lg"
+              onClick={handleCloseModal}
+              disabled={uploadState === 'uploading'}
+            >
+              CANCEL
+            </Button>
           </div>
         </form>
-      </Card>
+      </Modal>
     </div>
   );
 }

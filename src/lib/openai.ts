@@ -246,7 +246,7 @@ export async function matchCardsToSlide(
 
 For each card, determine:
 1. alignment_type:
-   - "directly_aligned": Card tests knowledge that directly matches the slide
+   - "directly_aligned": Card tests knowledge that directly matches the slide (ONLY use this if relevance_score >= 90)
    - "deeper_than_lecture": Card goes beyond what the slide covers
    - "too_shallow": Card is too basic compared to the slide
    - "not_aligned": Not meaningfully related
@@ -254,6 +254,7 @@ For each card, determine:
 2. relevance_score: 0-100 (how relevant is this card to the slide?)
 3. reasoning: Brief explanation (1 sentence)
 
+IMPORTANT: Only classify as "directly_aligned" if relevance_score is 90 or higher.
 Only include cards with relevance_score >= 30.
 
 Respond in JSON format:
@@ -263,7 +264,7 @@ Respond in JSON format:
       "card_id": "abc123",
       "alignment_type": "directly_aligned",
       "reasoning": "Brief explanation",
-      "relevance_score": 85
+      "relevance_score": 92
     }
   ]
 }`,

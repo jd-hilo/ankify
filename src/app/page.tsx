@@ -30,7 +30,7 @@ export default function Home() {
     {
       icon: Zap,
       title: 'LIGHTNING FAST',
-      description: 'ALIGN HUNDREDS OF SLIDES IN MINUTES, NOT HOURS',
+      description: 'MATCH HUNDREDS OF SLIDES IN MINUTES, NOT HOURS',
       bgClass: 'bg-neo-accent',
     },
     {
@@ -42,7 +42,7 @@ export default function Home() {
     {
       icon: Target,
       title: 'PRECISE MATCHING',
-      description: 'AI-POWERED ALIGNMENT FINDS THE PERFECT CARDS FOR EACH SLIDE',
+      description: 'AI-POWERED MATCHING FINDS THE PERFECT CARDS FOR EACH SLIDE',
       bgClass: 'bg-neo-muted',
     },
   ];
@@ -72,7 +72,7 @@ export default function Home() {
                 <span className="block text-neo-accent drop-shadow-[8px_8px_0px_rgba(0,0,0,1)]">SMARTER</span>
               </h1>
               <p className="text-2xl sm:text-3xl font-black uppercase mb-10 leading-tight max-w-md">
-                ALIGN LECTURES WITH <span className="bg-neo-secondary px-2 border-4 border-black inline-block rotate-1">ANKING</span> CARDS INSTANTLY
+                MATCH LECTURES WITH <span className="bg-neo-secondary px-2 border-4 border-black inline-block rotate-1">ANKING</span> CARDS INSTANTLY
               </p>
               <div className="flex flex-col sm:flex-row gap-6">
                 <Link href="/login">
@@ -100,7 +100,7 @@ export default function Home() {
                     <div className="text-2xl font-black">1. ADD LECTURES</div>
                   </div>
                   <div className="bg-white border-4 border-black p-5 shadow-neo-sm -rotate-1">
-                    <div className="text-2xl font-black">2. GET ALIGNED CARDS</div>
+                    <div className="text-2xl font-black">2. GET MATCHED CARDS</div>
                   </div>
                   <div className="bg-white border-4 border-black p-5 shadow-neo-sm rotate-2">
                     <div className="text-2xl font-black">3. EXPORT</div>
@@ -115,7 +115,7 @@ export default function Home() {
       {/* Marquee Section */}
       <div className="bg-black py-4 overflow-hidden border-b-8 border-black whitespace-nowrap">
         <div className="inline-block animate-marquee text-white font-black text-2xl uppercase tracking-[0.2em]">
-          NO MORE MANUAL SEARCHING • SAVE HOURS EVERY WEEK • MASTER YOUR CURRICULUM • AI-POWERED ALIGNMENT • ANKING COMPATIBLE • NO MORE MANUAL SEARCHING • SAVE HOURS EVERY WEEK • MASTER YOUR CURRICULUM • AI-POWERED ALIGNMENT • ANKING COMPATIBLE •
+          NO MORE MANUAL SEARCHING • SAVE HOURS EVERY WEEK • MASTER YOUR CURRICULUM • AI-POWERED MATCHING • ANKING COMPATIBLE • NO MORE MANUAL SEARCHING • SAVE HOURS EVERY WEEK • MASTER YOUR CURRICULUM • AI-POWERED MATCHING • ANKING COMPATIBLE •
         </div>
       </div>
 
@@ -143,7 +143,7 @@ export default function Home() {
               <div className="bg-neo-secondary border-4 border-black p-6 mb-8 inline-block shadow-neo-md">
                 <span className="text-6xl font-black">2</span>
               </div>
-              <h3 className="text-3xl font-black uppercase mb-6 tracking-tight">GET ALIGNED CARDS</h3>
+              <h3 className="text-3xl font-black uppercase mb-6 tracking-tight">GET MATCHED CARDS</h3>
               <p className="text-xl font-bold leading-relaxed opacity-80">
                 AI MATCHES YOUR SLIDE CONCEPTS TO ANKING CARDS FROM ANY UPLOADED DECK. INSTANT RESULTS.
               </p>

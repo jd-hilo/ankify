@@ -117,7 +117,7 @@ export default async function DashboardPage() {
                 <p className="text-lg font-bold mb-4">
                   NO LECTURES YET
                 </p>
-                <Link href="/lectures/upload">
+                <Link href="/lectures">
                   <Button variant="primary">
                     UPLOAD YOUR FIRST LECTURE
                   </Button>

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Card } from '@/components/ui';
-import { Download, Loader2, Check } from 'lucide-react';
+import { Button, Card, Modal } from '@/components/ui';
+import { Copy, Loader2, Check } from 'lucide-react';
 
 interface ExportButtonProps {
   lectureId: string;
@@ -65,10 +65,7 @@ export function ExportButton({ lectureId, lectureName }: ExportButtonProps) {
       // Copy to clipboard
       await navigator.clipboard.writeText(data.cidSearch);
       setCopied(true);
-      setTimeout(() => {
-        setShowOptions(false);
-        setCopied(false);
-      }, 2000);
+      setShowOptions(false);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to export');
     } finally {
@@ -86,12 +83,12 @@ export function ExportButton({ lectureId, lectureName }: ExportButtonProps) {
         {exporting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 stroke-[3px] animate-spin" />
-            EXPORTING...
+            COPYING...
           </>
         ) : (
           <>
-            <Download className="mr-2 h-4 w-4 stroke-[3px]" />
-            EXPORT CARDS
+            <Copy className="mr-2 h-4 w-4 stroke-[3px]" />
+            COPY DIRECTLY ALIGNED IDS
           </>
         )}
       </Button>
@@ -114,7 +111,7 @@ export function ExportButton({ lectureId, lectureName }: ExportButtonProps) {
                     COPIED!
                   </>
                 ) : (
-                  'COPY CID: SEARCH - DIRECTLY ALIGNED'
+                  'COPY CID: SEARCH - DIRECTLY MATCHED'
                 )}
               </Button>
               <Button
@@ -137,7 +134,7 @@ export function ExportButton({ lectureId, lectureName }: ExportButtonProps) {
                   className="w-full justify-start"
                   disabled={exporting}
                 >
-                  DOWNLOAD WORD FILES - DIRECTLY ALIGNED
+                  DOWNLOAD WORD FILE - DIRECTLY MATCHED
                 </Button>
                 <Button
                   variant="outline"
@@ -146,13 +143,70 @@ export function ExportButton({ lectureId, lectureName }: ExportButtonProps) {
                   className="w-full justify-start"
                   disabled={exporting}
                 >
-                  DOWNLOAD WORD FILES - ALL MATCHES
+                  DOWNLOAD WORD FILE - ALL MATCHES
                 </Button>
               </div>
             </div>
           </div>
         </Card>
       )}
+
+      {/* Copy success modal */}
+      <Modal
+        isOpen={copied}
+        onClose={() => setCopied(false)}
+        title="COPIED TO CLIPBOARD"
+      >
+        <div className="p-4">
+          <p className="text-base font-bold mb-6">
+            Card IDs have been copied to your clipboard!
+          </p>
+          
+          <div className="space-y-4 mb-6">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-neo-accent border-2 border-black flex items-center justify-center text-sm font-black text-white">
+                1
+              </div>
+              <p className="text-sm font-bold flex-1">
+                Go to your AnKing deck in Anki
+              </p>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-neo-accent border-2 border-black flex items-center justify-center text-sm font-black text-white">
+                2
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold mb-2">
+                  Paste the IDs in the search bar
+                </p>
+                <img 
+                  src="/assets/demo.png" 
+                  alt="Anki search bar demo" 
+                  className="w-full border-4 border-black shadow-neo-sm"
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-neo-accent border-2 border-black flex items-center justify-center text-sm font-black text-white">
+                3
+              </div>
+              <p className="text-sm font-bold flex-1">
+                View and study each card for this lecture
+              </p>
+            </div>
+          </div>
+          
+          <Button
+            variant="primary"
+            onClick={() => setCopied(false)}
+            className="w-full"
+          >
+            GOT IT
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
