@@ -123,7 +123,7 @@ export default async function LectureDetailPage({ params, searchParams }: Props)
     .select('alignment_type, card_concepts(card_id)')
     .eq('lecture_id', id);
 
-  const countData = (countDataRaw || []) as Array<{ alignment_type: AlignmentType; card_concepts: { card_id: string } | null }>;
+  const countData = (countDataRaw || []) as unknown as Array<{ alignment_type: AlignmentType; card_concepts: { card_id: string } | null }>;
 
   // Deduplicate by card_id for each alignment type
   const uniqueCardsByType = {
