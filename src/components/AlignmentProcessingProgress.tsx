@@ -12,9 +12,11 @@ interface ProcessingJob {
 
 interface Props {
   lectureId: string;
+  onComplete?: () => void;
+  onError?: (errorMessage: string) => void;
 }
 
-export function AlignmentProcessingProgress({ lectureId }: Props) {
+export function AlignmentProcessingProgress({ lectureId, onComplete, onError }: Props) {
   const router = useRouter();
   const [job, setJob] = useState<ProcessingJob | null>(null);
   const [statusMessage, setStatusMessage] = useState('Initializing...');
@@ -45,10 +47,21 @@ export function AlignmentProcessingProgress({ lectureId }: Props) {
             setStatusMessage('Complete!');
           }
 
-          // If completed or failed, stop polling and refresh
-          if (data.job.status === 'completed' || data.job.status === 'failed') {
+          // If completed or failed, stop polling
+          if (data.job.status === 'completed') {
             clearInterval(intervalId);
-            setTimeout(() => router.refresh(), 1000);
+            if (onComplete) {
+              setTimeout(() => onComplete(), 1000);
+            } else {
+              setTimeout(() => router.refresh(), 1000);
+            }
+          } else if (data.job.status === 'failed') {
+            clearInterval(intervalId);
+            if (onError && data.job.error_message) {
+              setTimeout(() => onError(data.job.error_message!), 1000);
+            } else {
+              setTimeout(() => router.refresh(), 1000);
+            }
           }
         }
       } catch (error) {
@@ -61,7 +74,7 @@ export function AlignmentProcessingProgress({ lectureId }: Props) {
     intervalId = setInterval(pollProgress, 2000);
 
     return () => clearInterval(intervalId);
-  }, [lectureId, router]);
+  }, [lectureId, router, onComplete, onError]);
 
   const handleCancel = async () => {
     if (!confirm('Are you sure you want to cancel alignment generation? All progress will be lost.')) {

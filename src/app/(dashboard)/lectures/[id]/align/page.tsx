@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Card, Input } from '@/components/ui';
+import { AlignmentProcessingProgress } from '@/components/AlignmentProcessingProgress';
 import { ArrowLeft, Loader2, Play } from 'lucide-react';
 
 interface Deck {
@@ -19,7 +20,7 @@ export default function AlignLecturePage() {
   const [selectedDeck, setSelectedDeck] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [aligning, setAligning] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const params = useParams();
@@ -51,7 +52,6 @@ export default function AlignLecturePage() {
 
     setAligning(true);
     setError(null);
-    setSuccess(false);
 
     try {
       console.log('Starting alignment for lecture:', lectureId, 'deck:', selectedDeck);
@@ -83,36 +83,25 @@ export default function AlignLecturePage() {
       const data = await response.json();
       console.log('Alignment started successfully:', data);
       
-      // Show success state
-      setSuccess(true);
+      // Switch to processing view
       setAligning(false);
-      
-      // Show success message briefly before redirect
-      // This helps on iPad where redirects can be delayed
-      setTimeout(() => {
-        console.log('Redirecting to results page...');
-        // Use window.location as fallback for iPad Safari router issues
-        try {
-          router.push(`/lectures/${lectureId}`);
-          // Also try window.location after a short delay if router.push doesn't work
-          setTimeout(() => {
-            if (window.location.pathname !== `/lectures/${lectureId}`) {
-              console.log('Router.push failed, using window.location fallback');
-              window.location.href = `/lectures/${lectureId}`;
-            }
-          }, 1000);
-        } catch (routerError) {
-          console.error('Router.push failed:', routerError);
-          // Fallback to window.location if router.push fails
-          window.location.href = `/lectures/${lectureId}`;
-        }
-      }, 1500);
+      setProcessing(true);
     } catch (err) {
       console.error('Alignment error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
       setAligning(false);
-      setSuccess(false);
     }
+  };
+
+  const handleComplete = () => {
+    console.log('Alignment complete, redirecting to lecture page...');
+    router.push(`/lectures/${lectureId}`);
+  };
+
+  const handleError = (errorMessage: string) => {
+    console.error('Alignment processing error:', errorMessage);
+    setError(errorMessage);
+    setProcessing(false);
   };
 
   if (loading) {
@@ -124,6 +113,22 @@ export default function AlignLecturePage() {
             <span className="text-lg font-black uppercase">LOADING DECKS...</span>
           </div>
         </Card>
+      </div>
+    );
+  }
+
+  // Show processing progress
+  if (processing) {
+    return (
+      <div className="max-w-4xl">
+        <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter mb-8">
+          MATCHING IN PROGRESS
+        </h1>
+        <AlignmentProcessingProgress 
+          lectureId={lectureId}
+          onComplete={handleComplete}
+          onError={handleError}
+        />
       </div>
     );
   }
@@ -150,7 +155,7 @@ export default function AlignLecturePage() {
             <p className="text-base font-bold mb-6">
               Please upload and process a deck first.
             </p>
-            <Link href="/decks/upload">
+            <Link href="/decks">
               <Button variant="primary" size="lg">
                 UPLOAD A DECK
               </Button>
@@ -164,13 +169,6 @@ export default function AlignLecturePage() {
                   {error}
                 </p>
               </div>
-            )}
-            {success && (
-              <Card className="p-4 bg-green-500 border-4 border-black shadow-neo-md">
-                <p className="text-sm font-black uppercase text-white">
-                  ✓ MATCHING STARTED! REDIRECTING TO RESULTS...
-                </p>
-              </Card>
             )}
 
             <div>
@@ -202,11 +200,6 @@ export default function AlignLecturePage() {
               </ol>
             </Card>
 
-            <Card className="p-4 bg-yellow-100 border-4 border-yellow-500">
-              <p className="text-sm font-black uppercase text-yellow-900">
-                ⚠️ PLEASE STAY ON THIS PAGE WHILE PROCESSING (WE ARE FIXING THIS SOON)
-              </p>
-            </Card>
             
             <Card className="p-4 bg-neo-secondary border-4 border-black">
               <p className="text-sm font-black uppercase">
@@ -219,18 +212,13 @@ export default function AlignLecturePage() {
                 type="submit"
                 variant="primary"
                 size="lg"
-                disabled={!selectedDeck || aligning || success}
+                disabled={!selectedDeck || aligning}
                 className="flex-1 sm:flex-none"
               >
               {aligning ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 stroke-[3px] animate-spin" />
                   STARTING MATCHING...
-                </>
-              ) : success ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 stroke-[3px] animate-spin" />
-                  REDIRECTING...
                 </>
               ) : (
                 <>
