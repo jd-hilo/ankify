@@ -263,43 +263,69 @@ async function processSlideAlignment(
 
   const directlyAlignedCards: string[] = [];
 
+  // Batch check for existing card_concepts
+  const cardIds = matches.map(m => m.card_id);
+  const { data: existingConcepts } = await supabase
+    .from('card_concepts')
+    .select('id, card_id')
+    .eq('deck_id', deckId)
+    .in('card_id', cardIds);
+
+  const existingConceptMap = new Map(
+    (existingConcepts || []).map(c => [c.card_id, c.id])
+  );
+
+  // Prepare new card_concepts to insert
+  const newCardConcepts: Array<{
+    deck_id: string;
+    card_id: string;
+    concept_summary: null;
+    embedding: null;
+    tags: string[] | null;
+  }> = [];
+
   for (const match of matches) {
-    // Find the raw card data
     const rawCard = candidatesToAnalyze.find(c => c.card_id === match.card_id);
     if (!rawCard) continue;
 
-    // Check if card_concept already exists
-    const { data: existingConcept } = await supabase
+    if (!existingConceptMap.has(match.card_id)) {
+      newCardConcepts.push({
+        deck_id: deckId,
+        card_id: match.card_id,
+        concept_summary: null,
+        embedding: null,
+        tags: rawCard.tags,
+      });
+    }
+
+    if (match.alignment_type === 'directly_aligned') {
+      directlyAlignedCards.push(`${rawCard.front.slice(0, 100)}...`);
+    }
+  }
+
+  // Batch insert new card_concepts
+  if (newCardConcepts.length > 0) {
+    const { data: inserted, error: insertError } = await supabase
       .from('card_concepts')
-      .select('id')
-      .eq('deck_id', deckId)
-      .eq('card_id', match.card_id)
-      .single();
+      .insert(newCardConcepts)
+      .select('id, card_id');
 
-    let cardConceptId: string;
-
-    if (existingConcept) {
-      cardConceptId = existingConcept.id;
-    } else {
-      // Create minimal card_concept entry (no summary/embedding needed for this approach)
-      const { data: inserted, error: insertError } = await supabase
-        .from('card_concepts')
-        .insert({
-          deck_id: deckId,
-          card_id: match.card_id,
-          concept_summary: null,
-          embedding: null,
-          tags: rawCard.tags,
-        })
-        .select('id')
-        .single();
-
-      if (insertError) {
-        console.error(`Error creating card concept for ${match.card_id}:`, insertError);
-        continue;
+    if (insertError) {
+      console.error('Error batch inserting card concepts:', insertError);
+    } else if (inserted) {
+      // Add newly inserted concepts to the map
+      for (const concept of inserted) {
+        existingConceptMap.set(concept.card_id, concept.id);
       }
+    }
+  }
 
-      cardConceptId = inserted.id;
+  // Now create alignments using the concept map
+  for (const match of matches) {
+    const cardConceptId = existingConceptMap.get(match.card_id);
+    if (!cardConceptId) {
+      console.error(`No card_concept_id found for card ${match.card_id}`);
+      continue;
     }
 
     alignments.push({
@@ -310,10 +336,6 @@ async function processSlideAlignment(
       similarity_score: match.relevance_score / 100, // Convert 0-100 to 0-1
       llm_reasoning: match.reasoning,
     });
-
-    if (match.alignment_type === 'directly_aligned') {
-      directlyAlignedCards.push(`${rawCard.front.slice(0, 100)}...`);
-    }
   }
 
   // Insert alignments
@@ -410,14 +432,12 @@ export async function generateAlignmentsInBackground(
     const slidesConcepts = slidesConceptsData as unknown as SlideConceptWithEmbedding[];
     console.log(`Processing alignments for ${slidesConcepts.length} slides...`);
 
-    // Process slides sequentially in batches for progress updates
-    // Sequential processing avoids database timeout issues from concurrent queries
-    const BATCH_SIZE = 5; // Update progress every 5 slides
+    // Process slides in parallel batches for faster alignment
     let processedCount = 0;
 
-    // Process slides in small parallel batches to balance speed and rate limits
-    // Batch size of 3 as requested by user
-    const PARALLEL_BATCH_SIZE = 3;
+    // Increased batch size for better performance (10 slides at once)
+    // This is safe for typical OpenAI rate limits on paid tiers
+    const PARALLEL_BATCH_SIZE = 10;
     
     for (let i = 0; i < slidesConcepts.length; i += PARALLEL_BATCH_SIZE) {
       // Check if job has been cancelled before processing next batch
@@ -471,10 +491,10 @@ export async function generateAlignmentsInBackground(
         }
       }));
         
-      // Delay between batches to avoid rate limits (2 seconds)
+      // Small delay between batches to avoid overwhelming rate limits (500ms)
       if (i + PARALLEL_BATCH_SIZE < slidesConcepts.length) {
-        console.log('Waiting 2s between batches to avoid rate limits...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        console.log('Waiting 500ms between batches...');
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 
