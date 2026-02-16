@@ -56,8 +56,20 @@ export async function POST(request: NextRequest, { params }: Params) {
       );
     }
 
-    // Get deck_id from existing alignments
-    const { data: alignmentData, error: alignmentError } = await supabase
+    // Ensure service role is available for deck lookup (bypass RLS - user may have matched with another user's deck)
+    let serviceClient;
+    try {
+      serviceClient = createServiceClient();
+    } catch (error) {
+      console.error('Missing service role credentials:', error);
+      return NextResponse.json(
+        { error: 'Server misconfigured: missing service role key' },
+        { status: 500 }
+      );
+    }
+
+    // Get deck_id from existing alignments (use service client - card_concepts may be from another user's deck)
+    const { data: alignmentData, error: alignmentError } = await serviceClient
       .from('card_alignments')
       .select(`
         card_concepts!inner(deck_id)
@@ -83,8 +95,8 @@ export async function POST(request: NextRequest, { params }: Params) {
       );
     }
 
-    // Verify deck exists and is completed (allow any user's deck)
-    const { data: deckData, error: deckError } = await supabase
+    // Verify deck exists and is completed (use service client - allow any user's deck)
+    const { data: deckData, error: deckError } = await serviceClient
       .from('decks')
       .select('id, processing_status')
       .eq('id', deckId)
@@ -101,18 +113,6 @@ export async function POST(request: NextRequest, { params }: Params) {
       return NextResponse.json(
         { error: 'Deck must be processed before alignment' },
         { status: 400 }
-      );
-    }
-
-    // Ensure service role is available before starting background job
-    let serviceClient;
-    try {
-      serviceClient = createServiceClient();
-    } catch (error) {
-      console.error('Missing service role credentials:', error);
-      return NextResponse.json(
-        { error: 'Server misconfigured: missing service role key' },
-        { status: 500 }
       );
     }
 

@@ -16,6 +16,7 @@ export function LectureActions({ lecture, hasAlignments }: LectureActionsProps) 
   const [processing, setProcessing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [regenError, setRegenError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleProcess = async () => {
@@ -44,19 +45,22 @@ export function LectureActions({ lecture, hasAlignments }: LectureActionsProps) 
     }
 
     setRegenerating(true);
+    setRegenError(null);
     try {
       const response = await fetch(`/api/alignments/${lecture.id}/regenerate`, {
         method: 'POST',
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.error || 'Failed to regenerate alignments');
       }
 
+      router.push(`/lectures/${lecture.id}`);
       router.refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to regenerate alignments');
+      setRegenError(err instanceof Error ? err.message : 'Failed to regenerate alignments');
       setRegenerating(false);
     }
   };
@@ -86,7 +90,13 @@ export function LectureActions({ lecture, hasAlignments }: LectureActionsProps) 
   };
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col gap-2">
+      {regenError && (
+        <div className="p-3 bg-red-500 border-4 border-black shadow-neo-sm w-full">
+          <p className="text-sm font-black uppercase text-white">{regenError}</p>
+        </div>
+      )}
+      <div className="flex flex-wrap gap-2">
       {lecture.processing_status === 'completed' && (
         <>
           {hasAlignments ? (
@@ -173,6 +183,7 @@ export function LectureActions({ lecture, hasAlignments }: LectureActionsProps) 
           </>
         )}
       </Button>
+      </div>
     </div>
   );
 }

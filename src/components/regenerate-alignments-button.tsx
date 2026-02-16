@@ -11,6 +11,7 @@ interface RegenerateAlignmentsButtonProps {
 
 export function RegenerateAlignmentsButton({ lectureId }: RegenerateAlignmentsButtonProps) {
   const [regenerating, setRegenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleRegenerate = async () => {
@@ -19,13 +20,15 @@ export function RegenerateAlignmentsButton({ lectureId }: RegenerateAlignmentsBu
     }
 
     setRegenerating(true);
+    setError(null);
     try {
       const response = await fetch(`/api/alignments/${lectureId}/regenerate`, {
         method: 'POST',
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.error || 'Failed to regenerate matches');
       }
 
@@ -33,17 +36,23 @@ export function RegenerateAlignmentsButton({ lectureId }: RegenerateAlignmentsBu
       router.push(`/lectures/${lectureId}`);
       router.refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to regenerate matches');
+      setError(err instanceof Error ? err.message : 'Failed to regenerate matches');
       setRegenerating(false);
     }
   };
 
   return (
-    <Button
-      variant="secondary"
-      onClick={handleRegenerate}
-      disabled={regenerating}
-    >
+    <div className="flex flex-col gap-2">
+      {error && (
+        <div className="p-3 bg-red-500 border-4 border-black shadow-neo-sm">
+          <p className="text-sm font-black uppercase text-white">{error}</p>
+        </div>
+      )}
+      <Button
+        variant="secondary"
+        onClick={handleRegenerate}
+        disabled={regenerating}
+      >
       {regenerating ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 stroke-[3px] animate-spin" />
@@ -56,5 +65,6 @@ export function RegenerateAlignmentsButton({ lectureId }: RegenerateAlignmentsBu
         </>
       )}
     </Button>
+    </div>
   );
 }

@@ -435,9 +435,9 @@ export async function generateAlignmentsInBackground(
     // Process slides in parallel batches for faster alignment
     let processedCount = 0;
 
-    // Increased batch size for better performance (10 slides at once)
-    // This is safe for typical OpenAI rate limits on paid tiers
-    const PARALLEL_BATCH_SIZE = 10;
+    // 5 slides at a time balances speed with database connection limits
+    // 10 caused statement timeouts from too many concurrent find_candidate_cards calls
+    const PARALLEL_BATCH_SIZE = 5;
     
     for (let i = 0; i < slidesConcepts.length; i += PARALLEL_BATCH_SIZE) {
       // Check if job has been cancelled before processing next batch
@@ -491,10 +491,10 @@ export async function generateAlignmentsInBackground(
         }
       }));
         
-      // Small delay between batches to avoid overwhelming rate limits (500ms)
+      // 1s delay between batches to let the database recover
       if (i + PARALLEL_BATCH_SIZE < slidesConcepts.length) {
-        console.log('Waiting 500ms between batches...');
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('Waiting 1s between batches...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
