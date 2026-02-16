@@ -201,13 +201,93 @@ export function LecturesWithUpload({ initialLectures, error: initialError }: Lec
           <p className="text-xl font-black uppercase mb-6">
             YOU HAVEN&apos;T UPLOADED ANY LECTURES YET
           </p>
-          <Link href="/lectures/upload">
-            <Button variant="primary" size="lg">
-              UPLOAD YOUR FIRST LECTURE
-            </Button>
-          </Link>
+          <Button variant="primary" size="lg" onClick={() => setShowUploadModal(true)}>
+            <Upload className="mr-2 h-5 w-5 stroke-[3px]" />
+            UPLOAD YOUR FIRST LECTURE
+          </Button>
         </Card>
       )}
+
+      <Modal
+        isOpen={showUploadModal}
+        onClose={handleCloseModal}
+        title="UPLOAD LECTURE"
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="p-4 bg-red-500 border-4 border-black shadow-neo-sm">
+              <p className="text-base font-black uppercase text-white">{error}</p>
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="name" className="block text-sm font-bold uppercase tracking-widest mb-2">
+              LECTURE NAME
+            </label>
+            <Input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Biochemistry Lecture 1"
+              required
+              disabled={uploading}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-widest mb-2">
+              FILE (PDF OR PPTX)
+            </label>
+            <div
+              className={`relative border-4 border-dashed ${
+                dragActive ? 'border-neo-accent bg-neo-accent/10' : 'border-black'
+              } p-8 text-center transition-colors ${
+                uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-neo-accent'
+              }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
+              <input
+                type="file"
+                onChange={handleFileChange}
+                accept=".pdf,.pptx"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                disabled={uploading}
+              />
+              <Upload className="mx-auto h-12 w-12 mb-4 stroke-[3px]" />
+              <p className="text-base font-bold uppercase mb-2">
+                {file ? file.name : 'DRAG & DROP OR CLICK TO UPLOAD'}
+              </p>
+              <p className="text-sm font-medium text-neo-muted">
+                SUPPORTED: PDF, PPTX
+              </p>
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            className="w-full"
+            disabled={!file || !name.trim() || uploading}
+          >
+            {uploading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 stroke-[3px] animate-spin" />
+                UPLOADING...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-5 w-5 stroke-[3px]" />
+                UPLOAD LECTURE
+              </>
+            )}
+          </Button>
+        </form>
+      </Modal>
     </div>
   );
 }
