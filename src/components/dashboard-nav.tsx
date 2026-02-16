@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui';
-import { LogOut } from 'lucide-react';
+import { LogOut, UserCircle } from 'lucide-react';
 
 interface DashboardNavProps {
   user: User;
@@ -69,10 +69,22 @@ export function DashboardNav({ user }: DashboardNavProps) {
           </div>
 
           {/* User Info & Sign Out */}
-          <div className="flex items-center gap-3 sm:gap-4">
-            <span className="hidden sm:inline text-sm font-bold uppercase tracking-wide">
-              {user.email}
-            </span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/profile"
+              className={`
+                inline-flex items-center gap-2 px-3 py-2 text-sm font-black uppercase tracking-widest
+                border-4 border-black transition-all duration-100
+                ${pathname === '/profile'
+                  ? 'bg-neo-secondary text-black shadow-neo-sm'
+                  : 'bg-white text-black hover:bg-neo-accent hover:text-white hover:shadow-neo-sm'
+                }
+                active:translate-x-[2px] active:translate-y-[2px] active:shadow-none
+              `}
+            >
+              <UserCircle className="h-4 w-4 stroke-[3px]" />
+              <span className="hidden sm:inline">PROFILE</span>
+            </Link>
             <Button
               variant="ghost"
               size="sm"
